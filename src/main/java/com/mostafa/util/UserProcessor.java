@@ -1,8 +1,10 @@
-package com.mostafa.config;
+package com.mostafa.util;
 
 import com.mostafa.entity.User;
 import org.springframework.batch.item.ItemProcessor;
+import org.springframework.stereotype.Component;
 
+@Component
 public class UserProcessor implements ItemProcessor<User, User> {
 
     /**

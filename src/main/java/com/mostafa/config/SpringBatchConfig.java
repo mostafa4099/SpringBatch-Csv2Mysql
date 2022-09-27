@@ -1,14 +1,14 @@
 package com.mostafa.config;
 
 import com.mostafa.entity.User;
-import com.mostafa.repository.UserRepository;
+import com.mostafa.util.UserProcessor;
+import com.mostafa.util.UserWriter;
 import lombok.AllArgsConstructor;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
-import org.springframework.batch.item.data.RepositoryItemWriter;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.LineMapper;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
@@ -27,7 +27,8 @@ public class SpringBatchConfig {
 
     private JobBuilderFactory jobBuilderFactory;
     private StepBuilderFactory stepBuilderFactory;
-    private UserRepository userRepository;
+    private UserProcessor userProcessor;
+    private UserWriter userWriter;
 
     /**
      * Read CSV and map csv columns with model.
@@ -65,27 +66,6 @@ public class SpringBatchConfig {
     }
 
     /**
-     * Process data before write in db.
-     * @return processor with process data
-     */
-    @Bean
-    public UserProcessor processor() {
-        return new UserProcessor();
-    }
-
-    /**
-     * Write data in db
-     * @return writer object
-     */
-    @Bean
-    public RepositoryItemWriter<User> writer() {
-        RepositoryItemWriter<User> writer = new RepositoryItemWriter<>();
-        writer.setRepository(userRepository);
-        writer.setMethodName("save");
-        return writer;
-    }
-
-    /**
      * Build job step using StepBuilderFactory with reader (CSV), processor (if any),
      * writer (in DB) and AsyncTaskExecutor
      * @return built step
@@ -94,8 +74,8 @@ public class SpringBatchConfig {
     public Step step() {
         return stepBuilderFactory.get("step").<User, User>chunk(10)
                 .reader(reader())
-                .processor(processor())
-                .writer(writer())
+                .processor(userProcessor)
+                .writer(userWriter)
                 .taskExecutor(taskExecutor())
                 .build();
     }
